@@ -14,6 +14,8 @@ final class FeedController: UIViewController {
 
     // MARK: - Properties
 
+    private let refreshControl = UIRefreshControl()
+
     // MARK: - View Models
 
     private let feedViewModel = FeedViewModel()
@@ -75,6 +77,7 @@ final class FeedController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        configureRefershControl()
         configureUI()
         configureNavigationBar()
         configureCollectionView()
@@ -105,6 +108,11 @@ final class FeedController: UIViewController {
 
     @objc private func handleLogoutButton() {
         self.showLogoutAlert()
+    }
+
+    @objc private func handleRefresh() {
+        collectionView.refreshControl?.beginRefreshing()
+        feedViewModel.ServiceTweet()
     }
 
     // MARK: - UI Configurations
@@ -154,6 +162,11 @@ final class FeedController: UIViewController {
 
     // MARK: - Functions
 
+    private func configureRefershControl() {
+        refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        self.collectionView.refreshControl = refreshControl
+    }
+
     private func showLogoutAlert() {
         let alertController = UIAlertController(title: "Logut", message: "로그아웃 하시겠습니까?", preferredStyle: .alert)
         let logout = UIAlertAction(title: "Logout", style: .destructive) {[weak self] _ in
@@ -188,6 +201,12 @@ final class FeedController: UIViewController {
         feedViewModel.onDataUpdated = { [weak self] in
             guard let self else { return }
             self.collectionView.reloadData()
+        }
+        feedViewModel.onRefreshControl = { [weak self] in
+            guard let self else { return }
+            DispatchQueue.main.async {
+                self.collectionView.refreshControl?.endRefreshing()
+            }
         }
 
         feedViewModel.ServiceTweet()

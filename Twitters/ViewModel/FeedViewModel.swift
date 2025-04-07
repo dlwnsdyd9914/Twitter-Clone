@@ -21,6 +21,8 @@ class FeedViewModel {
     var onLogoutFail: ((Error) -> Void)?
     var onDataUpdated: (() -> Void)?
 
+    var onRefreshControl: (() -> Void)?
+
     static var tweetCache = NSCache<NSString, NSArray>()
     static let nsCacheKey = "tweetKeys"
 
@@ -94,17 +96,23 @@ class FeedViewModel {
 
 
     func ServiceTweet() {
-        if let cachedTweets = FeedViewModel.tweetCache.object(forKey: FeedViewModel.nsCacheKey as NSString) as? [Tweet] {
-            self.tweets = cachedTweets
-            print("🗂 캐시된 트윗 사용: \(self.tweets.count)개")
-        }
+
+        self.tweets.removeAll()
+//        if let cachedTweets = FeedViewModel.tweetCache.object(forKey: FeedViewModel.nsCacheKey as NSString) as? [Tweet] {
+//            self.tweets = cachedTweets
+//            print("🗂 캐시된 트윗 사용: \(self.tweets.count)개")
+//        }
 
         // ✅ 항상 서버에서 실시간으로도 가져오기
-        TweetService.shared.fetchAllTweet { [weak self] result in
+
+        TweetService.shared.fetchFollowTweet { [weak self] result in
             guard let self else { return }
             switch result {
             case .success(let tweet):
                 self.fetchTweet(tweet: tweet)
+                DispatchQueue.main.async {
+                    self.onRefreshControl?()
+                }
             case .failure(let error):
                 switch error {
                 case .dataParsingError:
@@ -118,6 +126,25 @@ class FeedViewModel {
         }
     }
 
+
+//        TweetService.shared.fetchAllTweet { [weak self] result in
+//            guard let self else { return }
+//            switch result {
+//            case .success(let tweet):
+//                self.fetchTweet(tweet: tweet)
+//            case .failure(let error):
+//                switch error {
+//                case .dataParsingError:
+//                    print("❗️데이터 파싱 에러")
+//                case .notFoundTweet:
+//                    print("❗️트윗 없음")
+//                case .notFoundUser:
+//                    print("❗️유저 없음")
+//                }
+//            }
+//        }
+//    }
+
     private func fetchTweet(tweet: Tweet) {
         // ✅ 1. 중복되지 않는다면 추가
         if !self.tweets.contains(where: { $0.tweetId == tweet.tweetId }) {
@@ -128,9 +155,9 @@ class FeedViewModel {
         self.tweets.sort(by: { $0.timeStamp > $1.timeStamp })
         print("🚀 새로운 트윗 추가됨! 총 트윗 개수: \(self.tweets.count)")
 
-        // ✅ 3. 최신 데이터 캐시에 저장
-        FeedViewModel.tweetCache.setObject(self.tweets as NSArray, forKey: FeedViewModel.nsCacheKey as NSString)
-        print("💾 캐시 업데이트 완료! 현재 트윗 개수: \(self.tweets.count)")
+//        // ✅ 3. 최신 데이터 캐시에 저장
+//        FeedViewModel.tweetCache.setObject(self.tweets as NSArray, forKey: FeedViewModel.nsCacheKey as NSString)
+//        print("💾 캐시 업데이트 완료! 현재 트윗 개수: \(self.tweets.count)")
     }
 
     

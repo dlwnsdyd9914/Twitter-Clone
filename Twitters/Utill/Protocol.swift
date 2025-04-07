@@ -37,6 +37,7 @@ protocol TweetModelProtocol {
     var user: User { get }
     var didLike: Bool { get set }
     var replyingTo: String? { get set }
+    var isRely: Bool { get     }
 }
 
 protocol TweetViewModelProtocol {

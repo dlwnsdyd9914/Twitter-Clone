@@ -82,7 +82,12 @@ class UserService {
                     completion(.failure(error))
                     return
                 }
+
                 NotificationService.shared.uploadNotification(type: .follow, toUid: uid)
+                USER_TWEET_REF.child(uid).observe(.childAdded) { snapshot in
+                    let key = snapshot.key
+                    USER_FEED_REF.child(currentUid).updateChildValues([key: 1])
+                }
                 completion(.success(())) // ✅ 올바른 성공 처리
             }
         }
@@ -102,6 +107,10 @@ class UserService {
                     print("팔로잉 취소 실패", error.localizedDescription)
                     completion(.failure(error))
                     return
+                }
+                USER_TWEET_REF.child(uid).observe(.childAdded) { snapshot in
+                    let key = snapshot.key
+                    USER_FEED_REF.child(currentUid).child(key).removeValue()
                 }
                 completion(.success(())) // ✅ 올바른 성공 처리
             }

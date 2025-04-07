@@ -97,7 +97,6 @@ class ProfileHeaderViewModel: ProfileHeaderViewModelProtocol {
 
     func handleEditFollowButton() {
         followToggle()
-        onEditFollowButton?()
     }
 
     func handleFollowing() {
@@ -113,6 +112,7 @@ class ProfileHeaderViewModel: ProfileHeaderViewModelProtocol {
     var onFollowFail: ((Error) -> Void)?
     var onUnFollowSuccess: ((String) -> Void)?
     var onUnFollowFail: ((Error) -> Void)?
+    var onEditProfile: (() -> Void)?
 
     var onFollowStateChagned: ((String) -> Void)?
 
@@ -121,7 +121,7 @@ class ProfileHeaderViewModel: ProfileHeaderViewModelProtocol {
 
     func followToggle() {
         if user.isCurrentUser {
-            print("Edit Profile")
+            self.onEditProfile?()
             return
         }
 

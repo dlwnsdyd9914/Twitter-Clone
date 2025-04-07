@@ -208,10 +208,15 @@ extension TweetController: UICollectionViewDelegateFlowLayout {
 
         } else {
             let dummyCell = TweetCell()
+            dummyCell.frame = CGRect(x: 0, y: 0, width: collectionView.frame.width, height: 1000)
+
             if let tweet = tweet {
                 dummyCell.viewModel = TweetViewModel(tweet: tweet)
             }
-            dummy = dummyCell
+
+
+            dummyCell.layoutIfNeeded()
+            dummy = dummyCell.contentView
         }
 
         let targetSize = CGSize(
@@ -237,7 +242,7 @@ extension TweetController: UICollectionViewDelegateFlowLayout {
 #Preview {
     let user = MockUserModel()
 
-    let mockTweetModel = MockTweetModel(didLike: true, caption: "caption", tweetId: "TweetId", user: User(uid: "uidTest", dictionary: ["d": "d"]), lieks: 1, retweets: 2, timeStamp: .now, uid: "TestUId")
+    let mockTweetModel = MockTweetModel(isRely: false, didLike: true, caption: "caption", tweetId: "TweetId", user: User(uid: "uidTest", dictionary: ["d": "d"]), lieks: 1, retweets: 2, timeStamp: .now, uid: "TestUId")
 
 
     VCPreView {

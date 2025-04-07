@@ -53,7 +53,7 @@ final class TweetService {
                     completion(.failure(NSError(domain: "FirebaseError", code: 500, userInfo: [NSLocalizedDescriptionKey: "트윗 ID 생성 실패"])))
                     return
                 }
-
+                self.updateUserFeed(tweetId: tweetId)
                 self.updateUserTweets(uid: uid, tweetId: tweetId, completion: completion)
             }
         case .reply(let tweet):
@@ -108,6 +108,40 @@ final class TweetService {
             }
         }
     }
+
+    func fetchFollowTweet(completion: @escaping (Result<Tweet, TweetServiceError>) -> Void) {
+        guard let currentUid = Auth.auth().currentUser?.uid else { return }
+
+        USER_FEED_REF.child(currentUid).observe(.childAdded) { snapshot in
+            let tweetId = snapshot.key
+            TWEET_REF.child(tweetId).observeSingleEvent(of: .value) { snapshot in
+                guard let tweetValue = snapshot.value as? [String: Any],
+                      let uid = tweetValue["uid"] as? String else { return }
+
+                USER_REF.child(uid).observeSingleEvent(of: .value) { snapshot in
+                    guard let userValue = snapshot.value as? [String: Any] else { return }
+                    let user = User(uid: uid, dictionary: userValue)
+                    let tweet = Tweet(tweetId: tweetId, dictionary: tweetValue, user: user)
+                    completion(.success(tweet))
+                }
+            }
+        }
+    }
+
+    private func updateUserFeed(tweetId: String) {
+         guard let currentUid = Auth.auth().currentUser?.uid else { return }
+
+         let values = [tweetId: 1]
+
+        USER_FOLLOWING_REF.child(currentUid).observe(.childAdded) { snapshot in
+            let key = snapshot.key
+            USER_FEED_REF.child(key).updateChildValues(values)
+        }
+        
+
+
+     }
+
     func selectFetchTweet(uid: String, completion: @escaping (Result<Tweet, TweetServiceError>) -> Void) {
         USER_TWEET_REF.child(uid).observe(.childAdded) { snapshot in
             let tweetId = snapshot.key
@@ -267,7 +301,6 @@ final class TweetService {
         TWEET_LIKES_REF.child(tweet.tweetId).child(currentUid).observe(.value) { snapshot in
             completion(snapshot.exists())
         }
-
     }
 
     func fetchTweetLikes(uid: String, completion: @escaping ((Tweet) -> Void)) {
@@ -307,7 +340,5 @@ final class TweetService {
             }
         }
     }
-
-
 }
 

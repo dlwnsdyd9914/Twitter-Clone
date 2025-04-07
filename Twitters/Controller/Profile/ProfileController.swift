@@ -167,13 +167,14 @@ final class ProfileController: UIViewController {
 
 extension ProfileController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        print(viewModel.currentDataSource.count)
         return viewModel.currentDataSource.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Cell.tweetCell, for: indexPath) as? TweetCell else { return UICollectionViewCell()}
-        cell.viewModel = TweetViewModel(tweet: viewModel.currentDataSource[indexPath.row])
+        cell.viewModel = TweetViewModel(tweet: viewModel.currentDataSource[indexPath.row], delegate: self)
 
         cell.onHandleCommentTapped = { [weak self] type in
              guard let self else { return }
@@ -199,6 +200,11 @@ extension ProfileController: UICollectionViewDataSource {
         guard let profileHeaderViewModel else { return UICollectionReusableView()}
         header.delegate = self
         header.viewModel = profileHeaderViewModel
+        header.onEditProfileButtonTap = {[weak self] in
+            guard let self else { return }
+            let editProfileController = EditProfileController()
+            self.navigationController?.pushViewController(editProfileController, animated: true)
+        }
 
 
         return header
@@ -249,18 +255,21 @@ extension ProfileController: UICollectionViewDelegateFlowLayout {
         if isHeader {
             let dummyHeader = ProfileHeader()
             dummyHeader.viewModel = profileHeaderViewModel
-            // 🔥 프레임 설정 추가 (가로 페이징 대응)
 
             dummyHeader.frame = CGRect(x: 0, y: 0, width: collectionView.frame.width, height: collectionView.frame.height)
             dummyHeader.layoutIfNeeded()
-
             dummy = dummyHeader
         } else {
             let dummyCell = TweetCell()
+            dummyCell.frame = CGRect(x: 0, y: 0, width: collectionView.frame.width, height: 1000)
+
             if let tweet = tweet {
                 dummyCell.viewModel = TweetViewModel(tweet: tweet)
             }
-            dummy = dummyCell
+
+
+            dummyCell.layoutIfNeeded()
+            dummy = dummyCell.contentView
         }
 
         let targetSize = CGSize(
@@ -281,6 +290,7 @@ extension ProfileController: UICollectionViewDelegateFlowLayout {
         return estimatedSize.height
     }
 
+
 }
 
 extension ProfileController: ProfileFilterViewDelegate {
@@ -292,6 +302,15 @@ extension ProfileController: ProfileFilterViewDelegate {
         viewModel.selectedFilter = filter
         viewModel.selectedFetchTweet(uid: userViewModel.uid)
         print("DD \(viewModel.selectedFilter)")
+    }
+    
+
+}
+
+extension ProfileController: TweetViewModelDelegate {
+    func didTapProfileImage(userViewModel: UserViewModel) {
+        let profileController = ProfileController(userViewModel: userViewModel)
+        self.navigationController?.pushViewController(profileController, animated: true)
     }
     
 

@@ -103,6 +103,8 @@ class ProfileHeader: UICollectionReusableView {
         $0.distribution = .fillEqually
     }
 
+    var onEditProfileButtonTap: (() -> Void)?
+
 
 
     @objc private func handleBackButton() {
@@ -111,7 +113,6 @@ class ProfileHeader: UICollectionReusableView {
 
     @objc private func handleEditFollowButton() {
         guard let viewModel else { return }
-
         viewModel.handleEditFollowButton()
     }
 
@@ -241,6 +242,11 @@ class ProfileHeader: UICollectionReusableView {
 
             self.followingLabel.attributedText = viewModel.followingString
             self.follwerLabel.attributedText = viewModel.followerString
+        }
+
+        viewModel.onEditProfile = {[weak self] in
+            guard let self else { return }
+            self.onEditProfileButtonTap?()
         }
 
         viewModel.checkingFollow()

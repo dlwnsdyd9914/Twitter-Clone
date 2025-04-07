@@ -58,6 +58,18 @@ class TweetViewModel: TweetViewModelProtocol {
         return tweet.didLike ? UIImage.likeFilled : UIImage.like
     }
 
+    var shouldHideReplyLabel: Bool {
+        return !tweet.isRely
+    }
+
+    var replyingTo: String {
+        return tweet.replyingTo ?? ""
+    }
+
+    var replyText: String {
+        return "→ replying to @\(replyingTo)"
+    }
+
     
 
     lazy var cacheyKey = "keys\(tweetId)" as NSString
@@ -164,6 +176,8 @@ class TweetViewModel: TweetViewModelProtocol {
 
 
 struct MockTweetModel: TweetModelProtocol {
+    var isRely: Bool
+    
     var replyingTo: String?
     
     var didLike: Bool

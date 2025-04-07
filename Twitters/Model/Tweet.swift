@@ -8,6 +8,11 @@
 import UIKit
 
 class Tweet: TweetModelProtocol {
+    var isRely: Bool {
+        return !(replyingTo?.isEmpty ?? true)
+    }
+
+
 
     var replyingTo: String?
     
